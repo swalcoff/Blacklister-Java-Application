@@ -102,15 +102,15 @@ public class QuickstartSample {
 
     public static ArrayList getFire() throws Exception{
         Firestore db = FirestoreClient.getFirestore();
-        ApiFuture<DocumentSnapshot> ds= db.collection("blacklist").document(username).get();
+        ApiFuture<DocumentSnapshot> ds= db.collection("blacklists").document(username).get();
         ArrayList<String> fireList = (ArrayList<String>) ds.get().get("list");
         return fireList;
     }
 
     public static boolean getBoolFire() throws Exception{
         Firestore db = FirestoreClient.getFirestore();
-        ApiFuture<DocumentSnapshot> ds= db.collection("blacklist").document(username).get();
-        Boolean fBool = (Boolean) ds.get().get("running");
+        ApiFuture<DocumentSnapshot> ds= db.collection("blacklists").document(username).get();
+        Boolean fBool = (Boolean) ds.get().get("enabled");
         return fBool;
     }
 
@@ -122,7 +122,11 @@ public class QuickstartSample {
     }
 
     public static void checker(blacklist bl) throws Exception{
-        if (getBoolFire() == false) return;
+        if (getBoolFire() == false) {
+            while(getBoolFire() == false){
+                Thread.sleep(5000);
+            }
+        }
         boolean bool = false;
         syncLists(bl);
         while(bool == false){
@@ -134,7 +138,7 @@ public class QuickstartSample {
 
 
 
-    public static String username = "Eric123";
+    public static String username = "eric123";
 
 
     public static void main(String... args) throws Exception {
@@ -144,7 +148,6 @@ public class QuickstartSample {
 
         blacklist mainBlack = new blacklist();
 
-        System.out.println(mainBlack);
 
 
         checker(mainBlack);

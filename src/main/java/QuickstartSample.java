@@ -122,10 +122,8 @@ public class QuickstartSample {
     }
 
     public static void checker(blacklist bl) throws Exception{
-        if (getBoolFire() == false) {
-            while(getBoolFire() == false){
-                Thread.sleep(5000);
-            }
+        while(getBoolFire() == false){
+            Thread.sleep(1000);
         }
         boolean bool = false;
         syncLists(bl);

@@ -1,11 +1,19 @@
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.paging.Page;
+import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.SetOptions;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.google.cloud.vision.v1.*;
 import com.google.cloud.vision.v1.Feature.Type;
 import com.google.cloud.vision.v1.Image;
+import com.google.common.collect.Lists;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
@@ -17,10 +25,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QuickstartSample {
+public class main {
 
     public static boolean detectText(String filePath, blacklist black) throws Exception, IOException {
         List<AnnotateImageRequest> requests = new ArrayList<>();
@@ -33,7 +43,19 @@ public class QuickstartSample {
                 AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
         requests.add(request);
 
-        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+        main m = new main();
+        m.setP("/jack-project-e1e305e8b623.json");
+
+        Credentials myCredentials = ServiceAccountCredentials.fromStream(
+                m.getP());
+
+        ImageAnnotatorSettings imageAnnotatorSettings =
+                ImageAnnotatorSettings.newBuilder()
+                        .setCredentialsProvider(FixedCredentialsProvider.create(myCredentials))
+                        .build();
+
+        try (ImageAnnotatorClient client =
+                     ImageAnnotatorClient.create(imageAnnotatorSettings)) {
             BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
             List<AnnotateImageResponse> responses = response.getResponsesList();
 
@@ -97,7 +119,7 @@ public class QuickstartSample {
 //    }
     public static void addToFire(blacklist bl) {
         Firestore db = FirestoreClient.getFirestore();
-        db.collection("blacklist").document(username).set(bl, SetOptions.merge());
+        db.collection("blacklists").document(username).set(bl, SetOptions.merge());
     }
 
     public static ArrayList getFire() throws Exception{
@@ -134,13 +156,44 @@ public class QuickstartSample {
         new myGui(bl);
     }
 
+     public static void authExplicit(InputStream jsonPath) throws IOException, java.net.URISyntaxException {
+         // You can specify a credential file by providing a path to GoogleCredentials.
+         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+
+         GoogleCredentials credentials = GoogleCredentials.fromStream(jsonPath)
+                 .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
+         Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+
+         System.out.println("Buckets:");
+         Page<Bucket> buckets = storage.list();
+         for (Bucket bucket : buckets.iterateAll()) {
+             System.out.println(bucket.toString());
+         }
+     }
+
+     InputStream getP(){
+        return path;
+     }
 
 
-    public static String username = "eric123";
+
+     void setP(String jsonPath) throws URISyntaxException, java.io.FileNotFoundException{
+        path = this.getClass().getResourceAsStream(jsonPath);
+     }
+
+     InputStream path;
+
+     public static String username = "eric123";
 
 
     public static void main(String... args) throws Exception {
-        FileInputStream serviceAccount = new FileInputStream("/Users/Samuel/Desktop/IntelliJ projects/googleVisionTest/ericsproject2-25b4b-firebase-adminsdk-3pqxo-a9ce82cc7d.json");
+        main m = new main();
+        m.setP("/jack-project-e1e305e8b623.json");
+        System.out.println(m.getP().toString());
+
+        authExplicit(m.getP());
+        m.setP("/ericsproject2-25b4b-firebase-adminsdk-3pqxo-a9ce82cc7d.json");
+        InputStream serviceAccount = m.getP();
         FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://ericsproject2-25b4b.firebaseio.com").build();
         FirebaseApp.initializeApp(options);
 

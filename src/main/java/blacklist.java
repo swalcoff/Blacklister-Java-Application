@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class blacklist extends QuickstartSample {
+public class blacklist extends main {
     private List<String> list = new ArrayList<String>();
 
     public List<String> getList() {

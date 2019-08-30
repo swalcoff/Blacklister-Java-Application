@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 
 
-public class myGui extends QuickstartSample {
+public class myGui extends main {
     private JFrame f;
     private JPanel p;
     private JButton b1;
@@ -73,9 +73,12 @@ public class myGui extends QuickstartSample {
                 String input = tex.getText();
                 try{
                         b.add(input);
+                        System.out.println(b.toString());
                         addToFire(b);
                         blist.setListData(b.getList().toArray());
-                }catch (java.lang.Exception e1) {}
+                }catch (java.lang.Exception e1) {
+                    System.out.println(e1);
+                }
             }
         });
         tex.addActionListener(new ActionListener() {
@@ -86,7 +89,9 @@ public class myGui extends QuickstartSample {
                         b.add(input);
                         addToFire(b);
                         blist.setListData(b.getList().toArray());
-                }catch (java.lang.Exception e1) {}
+                }catch (java.lang.Exception e1) {
+                    System.out.println(e1);
+                }
             }
         });
 

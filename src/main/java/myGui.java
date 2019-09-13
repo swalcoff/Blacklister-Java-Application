@@ -20,11 +20,11 @@ public class myGui extends main {
 
     //blacklist gBlack;
 
-    public myGui(blacklist b){
-        gui(b);
+    public myGui(blacklist b, String username){
+        gui(b, username);
     }
 
-    public void gui(blacklist b){
+    public void gui(blacklist b, String username){
         f = new JFrame();
         f.setSize(400, 300);
 
@@ -61,7 +61,7 @@ public class myGui extends main {
                 f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 f.dispatchEvent(new WindowEvent(f, WindowEvent.WINDOW_CLOSING));
                 try{
-                    checker(b);
+                    checker(b, username);
                 } catch (java.lang.Exception e1){
                     System.err.println(e1);
                 }
@@ -74,7 +74,7 @@ public class myGui extends main {
                 try{
                         b.add(input);
                         System.out.println(b.toString());
-                        addToFire(b);
+                        addToFire(b, username);
                         blist.setListData(b.getList().toArray());
                 }catch (java.lang.Exception e1) {
                     System.out.println(e1);
@@ -87,7 +87,7 @@ public class myGui extends main {
                 String input = tex.getText();
                 try{
                         b.add(input);
-                        addToFire(b);
+                        addToFire(b, username);
                         blist.setListData(b.getList().toArray());
                 }catch (java.lang.Exception e1) {
                     System.out.println(e1);

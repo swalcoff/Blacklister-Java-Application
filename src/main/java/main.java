@@ -7,6 +7,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.SetOptions;
+import com.google.cloud.firestore.WriteResult;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -28,7 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class main {
 
@@ -117,57 +120,66 @@ public class main {
 //        ApiFuture<DocumentSnapshot> ds= db.collection("blacklist").document("black1").get();
 //        System.out.println("LIST: " + ds.get().get("list"));
 //    }
-    public static void addToFire(blacklist bl) {
+    public static void addToFire(blacklist bl, String username) {
         Firestore db = FirestoreClient.getFirestore();
         db.collection("blacklists").document(username).set(bl, SetOptions.merge());
     }
 
-    public static ArrayList getFire() throws Exception{
+    public static void initFire(blacklist bl, String username) throws Exception{
+        Map<String, Object> docData = new HashMap<>();
+        docData.put("enabled", true);
+        docData.put("list", bl.getList());
+        Firestore db = FirestoreClient.getFirestore();
+        ApiFuture<WriteResult> future = db.collection("blacklists").document(username).set(docData);
+        System.out.println("Update time : " + future.get().getUpdateTime());
+    }
+
+    public static ArrayList getFire(String username) throws Exception{
         Firestore db = FirestoreClient.getFirestore();
         ApiFuture<DocumentSnapshot> ds= db.collection("blacklists").document(username).get();
         ArrayList<String> fireList = (ArrayList<String>) ds.get().get("list");
         return fireList;
     }
 
-    public static boolean getBoolFire() throws Exception{
+    public static boolean getBoolFire(String username) throws Exception{
         Firestore db = FirestoreClient.getFirestore();
         ApiFuture<DocumentSnapshot> ds= db.collection("blacklists").document(username).get();
         Boolean fBool = (Boolean) ds.get().get("enabled");
         return fBool;
     }
 
-    public static void syncLists(blacklist bl) throws Exception{
-        if(getFire().equals(bl.getList())){
+    public static void syncLists(blacklist bl, String username) throws Exception{
+        List<String> temp = getFire(username);
+        if(temp == null || temp.equals(bl.getList())){
             return;
         }
-        bl.setList(getFire());
+        bl.setList(getFire(username));
     }
 
-    public static void checker(blacklist bl) throws Exception{
-        while(getBoolFire() == false){
+    public static void checker(blacklist bl, String username) throws Exception{
+        while(getBoolFire(username) == false){
             Thread.sleep(1000);
         }
         boolean bool = false;
-        syncLists(bl);
+        syncLists(bl, username);
         while(bool == false){
             bool = detectText(screencap(), bl);
             Thread.sleep(5000);
         }
-        new myGui(bl);
+        new myGui(bl, username);
     }
 
      public static void authExplicit(InputStream jsonPath) throws IOException, java.net.URISyntaxException {
          // You can specify a credential file by providing a path to GoogleCredentials.
          // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-
          GoogleCredentials credentials = GoogleCredentials.fromStream(jsonPath)
                  .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
          Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
 
-         System.out.println("Buckets:");
+//         System.out.println("Buckets:");
          Page<Bucket> buckets = storage.list();
          for (Bucket bucket : buckets.iterateAll()) {
-             System.out.println(bucket.toString());
+//             System.out.println(bucket.toString());
          }
      }
 
@@ -183,10 +195,12 @@ public class main {
 
      InputStream path;
 
-     public static String username = "eric123";
+//     public static String username = "eric123";
 
 
     public static void main(String... args) throws Exception {
+        String username = "scwalcof@ucsc.edu";
+
         main m = new main();
         m.setP("/jack-project-e1e305e8b623.json");
         System.out.println(m.getP().toString());
@@ -199,9 +213,18 @@ public class main {
 
         blacklist mainBlack = new blacklist();
 
+        syncLists(mainBlack, username);
+        initFire(mainBlack, username);
 
 
-        checker(mainBlack);
+
+        if(mainBlack.getList().isEmpty()){
+            new initGui(mainBlack, username);
+        }else{
+            checker(mainBlack, username);
+        }
+
+
 
         System.out.println("Program finished");
 
